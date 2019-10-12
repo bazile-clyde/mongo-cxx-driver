@@ -16,42 +16,28 @@
   ],
   "database_name": "retryable-reads-tests",
   "collection_name": "coll",
-  "data": [
-    {
-      "_id": 1,
-      "x": 11
-    },
-    {
-      "_id": 2,
-      "x": 22
-    }
-  ],
+  "data": [],
   "tests": [
     {
-      "description": "Count succeeds on first attempt",
+      "description": "ListDatabaseObjects succeeds on first attempt",
       "operations": [
         {
-          "name": "count",
-          "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
-          "result": 2
+          "name": "listDatabaseObjects",
+          "object": "client"
         }
       ],
       "expectations": [
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
-            },
-            "database_name": "retryable-reads-tests"
+              "listDatabases": 1
+            }
           }
         }
       ]
     },
     {
-      "description": "Count succeeds on second attempt",
+      "description": "ListDatabaseObjects succeeds on second attempt",
       "failPoint": {
         "configureFailPoint": "failCommand",
         "mode": {
@@ -59,42 +45,36 @@
         },
         "data": {
           "failCommands": [
-            "count"
+            "listDatabases"
           ],
           "closeConnection": true
         }
       },
       "operations": [
         {
-          "name": "count",
-          "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
-          "result": 2
+          "name": "listDatabaseObjects",
+          "object": "client"
         }
       ],
       "expectations": [
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
-            },
-            "database_name": "retryable-reads-tests"
+              "listDatabases": 1
+            }
           }
         },
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
-            },
-            "database_name": "retryable-reads-tests"
+              "listDatabases": 1
+            }
           }
         }
       ]
     },
     {
-      "description": "Count fails on first attempt",
+      "description": "ListDatabaseObjects fails on first attempt",
       "clientOptions": {
         "retryReads": false
       },
@@ -105,18 +85,15 @@
         },
         "data": {
           "failCommands": [
-            "count"
+            "listDatabases"
           ],
           "closeConnection": true
         }
       },
       "operations": [
         {
-          "name": "count",
-          "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
+          "name": "listDatabaseObjects",
+          "object": "client",
           "error": true
         }
       ],
@@ -124,15 +101,14 @@
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
-            },
-            "database_name": "retryable-reads-tests"
+              "listDatabases": 1
+            }
           }
         }
       ]
     },
     {
-      "description": "Count fails on second attempt",
+      "description": "ListDatabaseObjects fails on second attempt",
       "failPoint": {
         "configureFailPoint": "failCommand",
         "mode": {
@@ -140,18 +116,15 @@
         },
         "data": {
           "failCommands": [
-            "count"
+            "listDatabases"
           ],
           "closeConnection": true
         }
       },
       "operations": [
         {
-          "name": "count",
-          "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
+          "name": "listDatabaseObjects",
+          "object": "client",
           "error": true
         }
       ],
@@ -159,17 +132,15 @@
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
-            },
-            "database_name": "retryable-reads-tests"
+              "listDatabases": 1
+            }
           }
         },
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
-            },
-            "database_name": "retryable-reads-tests"
+              "listDatabases": 1
+            }
           }
         }
       ]

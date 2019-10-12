@@ -28,14 +28,11 @@
   ],
   "tests": [
     {
-      "description": "Count succeeds on first attempt",
+      "description": "EstimatedDocumentCount succeeds on first attempt",
       "operations": [
         {
-          "name": "count",
+          "name": "estimatedDocumentCount",
           "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
           "result": 2
         }
       ],
@@ -51,7 +48,7 @@
       ]
     },
     {
-      "description": "Count succeeds on second attempt",
+      "description": "EstimatedDocumentCount succeeds on second attempt",
       "failPoint": {
         "configureFailPoint": "failCommand",
         "mode": {
@@ -66,11 +63,8 @@
       },
       "operations": [
         {
-          "name": "count",
+          "name": "estimatedDocumentCount",
           "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
           "result": 2
         }
       ],
@@ -94,7 +88,7 @@
       ]
     },
     {
-      "description": "Count fails on first attempt",
+      "description": "EstimatedDocumentCount fails on first attempt",
       "clientOptions": {
         "retryReads": false
       },
@@ -112,11 +106,8 @@
       },
       "operations": [
         {
-          "name": "count",
+          "name": "estimatedDocumentCount",
           "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
           "error": true
         }
       ],
@@ -132,7 +123,7 @@
       ]
     },
     {
-      "description": "Count fails on second attempt",
+      "description": "EstimatedDocumentCount fails on second attempt",
       "failPoint": {
         "configureFailPoint": "failCommand",
         "mode": {
@@ -147,11 +138,8 @@
       },
       "operations": [
         {
-          "name": "count",
+          "name": "estimatedDocumentCount",
           "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
           "error": true
         }
       ],

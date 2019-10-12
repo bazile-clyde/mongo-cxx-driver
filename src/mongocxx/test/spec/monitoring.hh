@@ -27,10 +27,11 @@ using namespace mongocxx;
 // Stores and compares apm events.
 class apm_checker {
    public:
-    options::apm get_apm_opts();
+    options::apm get_apm_opts(bool command_started_events_only = false);
     void compare(bsoncxx::array::view expected,
                  bool allow_extra = false,
                  const test_util::match_visitor& match_visitor = {});
+    void clear();
 
    private:
     std::vector<bsoncxx::document::value> _events;

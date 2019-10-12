@@ -1,4 +1,21 @@
 {
+  "runOn": [
+    {
+      "minServerVersion": "4.0",
+      "topology": [
+        "single",
+        "replicaset"
+      ]
+    },
+    {
+      "minServerVersion": "4.1.7",
+      "topology": [
+        "sharded"
+      ]
+    }
+  ],
+  "database_name": "retryable-reads-tests",
+  "collection_name": "coll",
   "data": [
     {
       "_id": 1,
@@ -23,83 +40,308 @@
   ],
   "tests": [
     {
-      "description": "Find with filter",
-      "operation": {
-        "name": "find",
-        "arguments": {
-          "filter": {
-            "_id": 1
-          }
-        }
-      },
-      "outcome": {
-        "result": [
-          {
-            "_id": 1,
-            "x": 11
-          }
-        ]
-      }
-    },
-    {
-      "description": "Find with filter, sort, skip, and limit",
-      "operation": {
-        "name": "find",
-        "arguments": {
-          "filter": {
-            "_id": {
-              "$gt": 2
+      "description": "Find succeeds on first attempt",
+      "operations": [
+        {
+          "name": "find",
+          "object": "collection",
+          "arguments": {
+            "filter": {},
+            "sort": {
+              "_id": 1
+            },
+            "limit": 4
+          },
+          "result": [
+            {
+              "_id": 1,
+              "x": 11
+            },
+            {
+              "_id": 2,
+              "x": 22
+            },
+            {
+              "_id": 3,
+              "x": 33
+            },
+            {
+              "_id": 4,
+              "x": 44
             }
-          },
-          "sort": {
-            "_id": 1
-          },
-          "skip": 2,
-          "limit": 2
+          ]
         }
-      },
-      "outcome": {
-        "result": [
-          {
-            "_id": 5,
-            "x": 55
+      ],
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "find": "coll",
+              "filter": {},
+              "sort": {
+                "_id": 1
+              },
+              "limit": 4
+            },
+            "database_name": "retryable-reads-tests"
           }
-        ]
-      }
+        }
+      ]
     },
     {
-      "description": "Find with limit, sort, and batchsize",
-      "operation": {
-        "name": "find",
-        "arguments": {
-          "filter": {},
-          "sort": {
-            "_id": 1
-          },
-          "limit": 4,
-          "batchSize": 2
+      "description": "Find succeeds on second attempt with explicit clientOptions",
+      "clientOptions": {
+        "retryReads": true
+      },
+      "failPoint": {
+        "configureFailPoint": "failCommand",
+        "mode": {
+          "times": 1
+        },
+        "data": {
+          "failCommands": [
+            "find"
+          ],
+          "closeConnection": true
         }
       },
-      "outcome": {
-        "result": [
-          {
-            "_id": 1,
-            "x": 11
+      "operations": [
+        {
+          "name": "find",
+          "object": "collection",
+          "arguments": {
+            "filter": {},
+            "sort": {
+              "_id": 1
+            },
+            "limit": 4
           },
-          {
-            "_id": 2,
-            "x": 22
-          },
-          {
-            "_id": 3,
-            "x": 33
-          },
-          {
-            "_id": 4,
-            "x": 44
+          "result": [
+            {
+              "_id": 1,
+              "x": 11
+            },
+            {
+              "_id": 2,
+              "x": 22
+            },
+            {
+              "_id": 3,
+              "x": 33
+            },
+            {
+              "_id": 4,
+              "x": 44
+            }
+          ]
+        }
+      ],
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "find": "coll",
+              "filter": {},
+              "sort": {
+                "_id": 1
+              },
+              "limit": 4
+            },
+            "database_name": "retryable-reads-tests"
           }
-        ]
-      }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "find": "coll",
+              "filter": {},
+              "sort": {
+                "_id": 1
+              },
+              "limit": 4
+            },
+            "database_name": "retryable-reads-tests"
+          }
+        }
+      ]
+    },
+    {
+      "description": "Find succeeds on second attempt",
+      "failPoint": {
+        "configureFailPoint": "failCommand",
+        "mode": {
+          "times": 1
+        },
+        "data": {
+          "failCommands": [
+            "find"
+          ],
+          "closeConnection": true
+        }
+      },
+      "operations": [
+        {
+          "name": "find",
+          "object": "collection",
+          "arguments": {
+            "filter": {},
+            "sort": {
+              "_id": 1
+            },
+            "limit": 4
+          },
+          "result": [
+            {
+              "_id": 1,
+              "x": 11
+            },
+            {
+              "_id": 2,
+              "x": 22
+            },
+            {
+              "_id": 3,
+              "x": 33
+            },
+            {
+              "_id": 4,
+              "x": 44
+            }
+          ]
+        }
+      ],
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "find": "coll",
+              "filter": {},
+              "sort": {
+                "_id": 1
+              },
+              "limit": 4
+            },
+            "database_name": "retryable-reads-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "find": "coll",
+              "filter": {},
+              "sort": {
+                "_id": 1
+              },
+              "limit": 4
+            },
+            "database_name": "retryable-reads-tests"
+          }
+        }
+      ]
+    },
+    {
+      "description": "Find fails on first attempt",
+      "clientOptions": {
+        "retryReads": false
+      },
+      "failPoint": {
+        "configureFailPoint": "failCommand",
+        "mode": {
+          "times": 1
+        },
+        "data": {
+          "failCommands": [
+            "find"
+          ],
+          "closeConnection": true
+        }
+      },
+      "operations": [
+        {
+          "name": "find",
+          "object": "collection",
+          "arguments": {
+            "filter": {},
+            "sort": {
+              "_id": 1
+            },
+            "limit": 4
+          },
+          "error": true
+        }
+      ],
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "find": "coll",
+              "filter": {},
+              "sort": {
+                "_id": 1
+              },
+              "limit": 4
+            },
+            "database_name": "retryable-reads-tests"
+          }
+        }
+      ]
+    },
+    {
+      "description": "Find fails on second attempt",
+      "failPoint": {
+        "configureFailPoint": "failCommand",
+        "mode": {
+          "times": 2
+        },
+        "data": {
+          "failCommands": [
+            "find"
+          ],
+          "closeConnection": true
+        }
+      },
+      "operations": [
+        {
+          "name": "find",
+          "object": "collection",
+          "arguments": {
+            "filter": {},
+            "sort": {
+              "_id": 1
+            },
+            "limit": 4
+          },
+          "error": true
+        }
+      ],
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "find": "coll",
+              "filter": {},
+              "sort": {
+                "_id": 1
+              },
+              "limit": 4
+            },
+            "database_name": "retryable-reads-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "find": "coll",
+              "filter": {},
+              "sort": {
+                "_id": 1
+              },
+              "limit": 4
+            },
+            "database_name": "retryable-reads-tests"
+          }
+        }
+      ]
     }
   ]
 }

@@ -9,41 +9,35 @@ runOn:
 database_name: &database_name "retryable-reads-tests"
 collection_name: &collection_name "coll"
 
-data:
-    - { _id: 1, x: 11 }
-    - { _id: 2, x: 22 }
+data: []
 
 tests:
     -
-        description: "Count succeeds on first attempt"
+        description: "ListDatabases succeeds on first attempt"
         operations:
-            - &retryable_operation_succeeds
-                <<: &retryable_operation
-                    name: count
-                    object: collection
-                    arguments: { filter: { } }
-                result: 2
+            - &retryable_operation
+                name: listDatabases
+                object: client
         expectations:
-            - &retryable_command_started_event
+            -  &retryable_command_started_event
                 command_started_event:
                     command:
-                            count: *collection_name
-                    database_name: *database_name
+                        listDatabases: 1
     -
-        description: "Count succeeds on second attempt"
-        failPoint:  &failCommand_failPoint
+        description: "ListDatabases succeeds on second attempt"
+        failPoint: &failCommand_failPoint
             configureFailPoint: failCommand
             mode: { times: 1 }
             data:
-                failCommands: [count]
+                failCommands:
+                        - listDatabases
                 closeConnection: true
-
-        operations: [*retryable_operation_succeeds]
+        operations: [*retryable_operation]
         expectations:
              - *retryable_command_started_event
              - *retryable_command_started_event
     -
-        description: "Count fails on first attempt"
+        description: "ListDatabases fails on first attempt"
         clientOptions:
             retryReads: false
         failPoint: *failCommand_failPoint
@@ -54,7 +48,7 @@ tests:
         expectations:
              - *retryable_command_started_event
     -
-        description: "Count fails on second attempt"
+        description: "ListDatabases fails on second attempt"
         failPoint:
             <<: *failCommand_failPoint
             mode: { times: 2 }
@@ -62,3 +56,4 @@ tests:
         expectations:
              - *retryable_command_started_event
              - *retryable_command_started_event
+

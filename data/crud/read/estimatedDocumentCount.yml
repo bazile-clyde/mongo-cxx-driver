@@ -15,35 +15,33 @@ data:
 
 tests:
     -
-        description: "Count succeeds on first attempt"
+        description: "EstimatedDocumentCount succeeds on first attempt"
         operations:
             - &retryable_operation_succeeds
                 <<: &retryable_operation
-                    name: count
+                    name: estimatedDocumentCount
                     object: collection
-                    arguments: { filter: { } }
                 result: 2
         expectations:
             - &retryable_command_started_event
                 command_started_event:
                     command:
-                            count: *collection_name
+                        count: *collection_name
                     database_name: *database_name
     -
-        description: "Count succeeds on second attempt"
+        description: "EstimatedDocumentCount succeeds on second attempt"
         failPoint:  &failCommand_failPoint
             configureFailPoint: failCommand
             mode: { times: 1 }
             data:
                 failCommands: [count]
                 closeConnection: true
-
         operations: [*retryable_operation_succeeds]
         expectations:
              - *retryable_command_started_event
              - *retryable_command_started_event
     -
-        description: "Count fails on first attempt"
+        description: "EstimatedDocumentCount fails on first attempt"
         clientOptions:
             retryReads: false
         failPoint: *failCommand_failPoint
@@ -54,10 +52,10 @@ tests:
         expectations:
              - *retryable_command_started_event
     -
-        description: "Count fails on second attempt"
+        description: "EstimatedDocumentCount fails on second attempt"
         failPoint:
-            <<: *failCommand_failPoint
-            mode: { times: 2 }
+          <<: *failCommand_failPoint
+          mode: { times: 2 }
         operations: [*retryable_operation_fails]
         expectations:
              - *retryable_command_started_event

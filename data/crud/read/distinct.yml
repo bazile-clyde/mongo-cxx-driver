@@ -1,3 +1,14 @@
+runOn:
+    -
+        minServerVersion: "4.0"
+        topology: ["single", "replicaset"]
+    -
+        minServerVersion: "4.1.7"
+        topology: ["sharded"]
+
+database_name: &database_name "retryable-reads-tests"
+collection_name: &collection_name "coll"
+
 data:
     - {_id: 1, x: 11}
     - {_id: 2, x: 22}
@@ -5,28 +16,56 @@ data:
 
 tests:
     -
-        description: "Distinct without a filter"
-        operation:
-            name: distinct
-            arguments:
-                fieldName: "x"
-                filter: {}
-
-        outcome:
-            result: 
-                - 11
-                - 22
-                - 33
+        description: "Distinct succeeds on first attempt"
+        operations:
+            - &retryable_operation_succeeds
+                <<: &retryable_operation
+                    name: distinct
+                    object: collection
+                    arguments: { fieldName: "x", filter: { _id: { $gt: 1 } } }
+                result:
+                    - 22
+                    - 33
+        expectations:
+            - &retryable_command_started_event
+                command_started_event:
+                    command:
+                        distinct: *collection_name
+                        key: "x"
+                        query:
+                            _id: {$gt: 1}
+                    database_name: *database_name
     -
-        description: "Distinct with a filter"
-        operation:
-            name: distinct
-            arguments:
-                fieldName: "x"
-                filter: 
-                    _id: {$gt: 1}
+        description: "Distinct succeeds on second attempt"
+        failPoint:  &failCommand_failPoint
+            configureFailPoint: failCommand
+            mode: { times: 1 }
+            data:
+                failCommands: [distinct]
+                closeConnection: true
+        operations: [*retryable_operation_succeeds]
+        expectations:
+             - *retryable_command_started_event
+             - *retryable_command_started_event
+    -
+        description: "Distinct fails on first attempt"
+        clientOptions:
+            retryReads: false
+        failPoint: *failCommand_failPoint
+        operations:
+            - &retryable_operation_fails
+                <<: *retryable_operation
+                error: true
+        expectations:
+             - *retryable_command_started_event
 
-        outcome:
-            result: 
-                - 22
-                - 33
+    -
+        description: "Distinct fails on second attempt"
+        failPoint:
+            <<: *failCommand_failPoint
+            mode: { times: 2 }
+        operations: [*retryable_operation_fails]
+        expectations:
+             - *retryable_command_started_event
+             - *retryable_command_started_event
+

@@ -3,7 +3,6 @@
     {
       "minServerVersion": "4.0",
       "topology": [
-        "single",
         "replicaset"
       ]
     },
@@ -20,30 +19,28 @@
     {
       "_id": 1,
       "x": 11
-    },
-    {
-      "_id": 2,
-      "x": 22
     }
   ],
   "tests": [
     {
-      "description": "Count succeeds on first attempt",
+      "description": "db.coll.watch succeeds on first attempt",
       "operations": [
         {
-          "name": "count",
-          "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
-          "result": 2
+          "name": "watch",
+          "object": "collection"
         }
       ],
       "expectations": [
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
+              "aggregate": "coll",
+              "cursor": {},
+              "pipeline": [
+                {
+                  "$changeStream": {}
+                }
+              ]
             },
             "database_name": "retryable-reads-tests"
           }
@@ -51,7 +48,7 @@
       ]
     },
     {
-      "description": "Count succeeds on second attempt",
+      "description": "db.coll.watch succeeds on second attempt",
       "failPoint": {
         "configureFailPoint": "failCommand",
         "mode": {
@@ -59,26 +56,28 @@
         },
         "data": {
           "failCommands": [
-            "count"
+            "aggregate"
           ],
           "closeConnection": true
         }
       },
       "operations": [
         {
-          "name": "count",
-          "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
-          "result": 2
+          "name": "watch",
+          "object": "collection"
         }
       ],
       "expectations": [
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
+              "aggregate": "coll",
+              "cursor": {},
+              "pipeline": [
+                {
+                  "$changeStream": {}
+                }
+              ]
             },
             "database_name": "retryable-reads-tests"
           }
@@ -86,7 +85,13 @@
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
+              "aggregate": "coll",
+              "cursor": {},
+              "pipeline": [
+                {
+                  "$changeStream": {}
+                }
+              ]
             },
             "database_name": "retryable-reads-tests"
           }
@@ -94,7 +99,7 @@
       ]
     },
     {
-      "description": "Count fails on first attempt",
+      "description": "db.coll.watch fails on first attempt",
       "clientOptions": {
         "retryReads": false
       },
@@ -105,18 +110,15 @@
         },
         "data": {
           "failCommands": [
-            "count"
+            "aggregate"
           ],
           "closeConnection": true
         }
       },
       "operations": [
         {
-          "name": "count",
+          "name": "watch",
           "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
           "error": true
         }
       ],
@@ -124,7 +126,13 @@
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
+              "aggregate": "coll",
+              "cursor": {},
+              "pipeline": [
+                {
+                  "$changeStream": {}
+                }
+              ]
             },
             "database_name": "retryable-reads-tests"
           }
@@ -132,7 +140,7 @@
       ]
     },
     {
-      "description": "Count fails on second attempt",
+      "description": "db.coll.watch fails on second attempt",
       "failPoint": {
         "configureFailPoint": "failCommand",
         "mode": {
@@ -140,18 +148,15 @@
         },
         "data": {
           "failCommands": [
-            "count"
+            "aggregate"
           ],
           "closeConnection": true
         }
       },
       "operations": [
         {
-          "name": "count",
+          "name": "watch",
           "object": "collection",
-          "arguments": {
-            "filter": {}
-          },
           "error": true
         }
       ],
@@ -159,7 +164,13 @@
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
+              "aggregate": "coll",
+              "cursor": {},
+              "pipeline": [
+                {
+                  "$changeStream": {}
+                }
+              ]
             },
             "database_name": "retryable-reads-tests"
           }
@@ -167,7 +178,13 @@
         {
           "command_started_event": {
             "command": {
-              "count": "coll"
+              "aggregate": "coll",
+              "cursor": {},
+              "pipeline": [
+                {
+                  "$changeStream": {}
+                }
+              ]
             },
             "database_name": "retryable-reads-tests"
           }
