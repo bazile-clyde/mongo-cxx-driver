@@ -187,7 +187,12 @@ void run_transactions_tests_in_file(const std::string& test_path) {
     INFO("Test path: " << test_path);
     auto test_spec = test_util::parse_test_file(test_path);
     REQUIRE(test_spec);
+
     auto test_spec_view = test_spec->view();
+    if (should_skip_spec_test(client{uri{}}, test_spec_view)) {
+        return;
+    }
+
     auto db_name = test_spec_view["database_name"].get_utf8().value;
     auto coll_name = test_spec_view["collection_name"].get_utf8().value;
     auto tests = test_spec_view["tests"].get_array().value;
@@ -202,8 +207,7 @@ void run_transactions_tests_in_file(const std::string& test_path) {
         bool fail_point_enabled = (bool)test["failPoint"];
         auto description = test["description"].get_utf8().value;
         INFO("Test description: " << description);
-        if (description.compare("run command fails with explicit secondary read preference") == 0) {
-            WARN("Skipping test - read preferences in database::run_command are not supported");
+        if (should_skip_spec_test(client{uri{}}, test.get_document().value)) {
             continue;
         }
 
