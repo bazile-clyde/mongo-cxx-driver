@@ -252,6 +252,7 @@ functions:
                           export MONGOCXX_ENABLE_SLOW_TESTS=1
                       fi
 
+                      CTEST_OUTPUT_ON_FAILURE=1
                       ulimit -c unlimited || true
                       # Run tests and examples 1-by-1 with "test_params" so we can run them with valgrind.
                       ${test_params} ./src/bsoncxx/test/test_bson
