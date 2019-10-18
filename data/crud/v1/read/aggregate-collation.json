@@ -9,6 +9,7 @@
   "tests": [
     {
       "description": "Aggregate with collation",
+      "skipReason": "Blocked on CXX-1756",
       "operation": {
         "name": "aggregate",
         "arguments": {

@@ -17,6 +17,7 @@
   "tests": [
     {
       "description": "Aggregate with $out",
+      "skipReason": "Blocked on CXX-1756",
       "operation": {
         "name": "aggregate",
         "arguments": {
@@ -58,6 +59,7 @@
     },
     {
       "description": "Aggregate with $out and batch size of 0",
+      "skipReason": "Blocked on CXX-1756",
       "operation": {
         "name": "aggregate",
         "arguments": {

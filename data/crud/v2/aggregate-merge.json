@@ -22,6 +22,7 @@
   "tests": [
     {
       "description": "Aggregate with $merge",
+      "skipReason": "Blocked on CXX-1756",
       "operations": [
         {
           "object": "collection",
@@ -95,6 +96,7 @@
     },
     {
       "description": "Aggregate with $merge and batch size of 0",
+      "skipReason": "Blocked on CXX-1756",
       "operations": [
         {
           "object": "collection",
@@ -170,6 +172,7 @@
     },
     {
       "description": "Aggregate with $merge and majority readConcern",
+      "skipReason": "Blocked on CXX-1756",
       "operations": [
         {
           "object": "collection",
@@ -251,6 +254,7 @@
     },
     {
       "description": "Aggregate with $merge and local readConcern",
+      "skipReason": "Blocked on CXX-1756",
       "operations": [
         {
           "object": "collection",
@@ -332,6 +336,7 @@
     },
     {
       "description": "Aggregate with $merge and available readConcern",
+      "skipReason": "Blocked on CXX-1756",
       "operations": [
         {
           "object": "collection",
