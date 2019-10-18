@@ -64,10 +64,10 @@ using bsoncxx::builder::basic::kvp;
 using bsoncxx::builder::basic::make_document;
 
 // Clears the collection and initialize it as the spec describes.
-void initialize_collection(array::view initial_data, collection coll) {
+void initialize_collection(collection* coll, array::view initial_data) {
     // We delete all documents from the collection instead of dropping the collection, as the former
     // has much better performance for the CRUD test collections.
-    coll.delete_many({});
+    coll->delete_many({});
 
     std::vector<document::view> documents_to_insert;
     for (auto&& document : initial_data) {
@@ -75,7 +75,7 @@ void initialize_collection(array::view initial_data, collection coll) {
     }
 
     if (documents_to_insert.size() > 0) {
-        coll.insert_many(documents_to_insert);
+        coll->insert_many(documents_to_insert);
     }
 }
 
@@ -117,7 +117,7 @@ void run_crud_tests_in_file(std::string test_path) {
         database db = client[db_name];
         collection coll = db[coll_name];
 
-        initialize_collection(test_spec_view["data"].get_array().value, coll);
+        initialize_collection(&coll, test_spec_view["data"].get_array().value);
         operation_runner op_runner{&coll};
 
         if (test["failPoint"]) {
@@ -208,7 +208,6 @@ void run_crud_tests_in_file(std::string test_path) {
 TEST_CASE("CRUD spec automated tests", "[crud_spec]") {
     instance::current();
 
-    client client{uri{}};
     char* crud_tests_path = std::getenv("CRUD_TESTS_PATH");
     REQUIRE(crud_tests_path);
 
