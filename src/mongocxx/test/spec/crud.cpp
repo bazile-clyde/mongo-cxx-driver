@@ -65,14 +65,11 @@ using bsoncxx::builder::basic::make_document;
 
 // Clears the collection and initialize it as the spec describes.
 void initialize_collection(array::view initial_data, collection coll) {
-    client client{uri{}};
-
     // We delete all documents from the collection instead of dropping the collection, as the former
     // has much better performance for the CRUD test collections.
     coll.delete_many({});
 
     std::vector<document::view> documents_to_insert;
-
     for (auto&& document : initial_data) {
         documents_to_insert.push_back(document.get_document().value);
     }
@@ -90,7 +87,7 @@ void run_crud_tests_in_file(std::string test_path) {
     options::client client_opts;
     apm_checker apm_checker;
     client_opts.apm_opts(apm_checker.get_apm_opts(true /* command_started_events_only */));
-    mongocxx::client client{uri{}, client_opts};
+    client client{uri{}, client_opts};
 
     document::view test_spec_view = test_spec->view();
     if (should_skip_spec_test(client, test_spec_view)) {
@@ -107,15 +104,15 @@ void run_crud_tests_in_file(std::string test_path) {
         std::string description = bsoncxx::string::to_string(test["description"].get_utf8().value);
         INFO("Test description: " << description);
 
-        std::string db_name = "crud_test";
-        if (test_spec_view["database_name"]) {
-            db_name = to_string(test_spec_view["database_name"].get_utf8().value);
-        }
+        auto value_or_default = [&](std::string key, std::string default_str) {
+            if (test_spec_view[key]) {
+                return to_string(test_spec_view[key].get_utf8().value);
+            }
+            return default_str;
+        };
 
-        std::string coll_name = "test";
-        if (test_spec_view["collection_name"]) {
-            coll_name = to_string(test_spec_view["collection_name"].get_utf8().value);
-        }
+        auto db_name = value_or_default("database_name", "crud_test");
+        auto coll_name = value_or_default("collection_name", "test");
 
         database db = client[db_name];
         collection coll = db[coll_name];
@@ -127,7 +124,6 @@ void run_crud_tests_in_file(std::string test_path) {
             client["admin"].run_command(test["failPoint"].get_document().value);
         }
 
-        apm_checker.clear();
         document::view expected_outcome;
         if (test["outcome"]) {
             expected_outcome = test["outcome"].get_document().value;
@@ -140,6 +136,8 @@ void run_crud_tests_in_file(std::string test_path) {
                 out_coll.delete_many({});
             }
         }
+
+        apm_checker.clear();
         auto perform_op = [&](document::view operation) {
             optional<operation_exception> exception;
             optional<document::value> actual_outcome_value;
