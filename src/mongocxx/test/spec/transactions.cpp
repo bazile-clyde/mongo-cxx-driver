@@ -187,12 +187,7 @@ void run_transactions_tests_in_file(const std::string& test_path) {
     INFO("Test path: " << test_path);
     auto test_spec = test_util::parse_test_file(test_path);
     REQUIRE(test_spec);
-
     auto test_spec_view = test_spec->view();
-    if (should_skip_spec_test(client{uri{}}, test_spec_view)) {
-        return;
-    }
-
     auto db_name = test_spec_view["database_name"].get_utf8().value;
     auto coll_name = test_spec_view["collection_name"].get_utf8().value;
     auto tests = test_spec_view["tests"].get_array().value;
@@ -385,12 +380,6 @@ TEST_CASE("Transactions spec automated tests", "[transactions_spec]") {
     std::string path{transactions_tests_path};
     if (path.back() == '/') {
         path.pop_back();
-    }
-
-    client client{uri{}};
-    if (test_util::get_max_wire_version(client) < 7) {
-        WARN("Skipping - max wire version is < 7");
-        return;
     }
 
     std::ifstream test_files{path + "/test_files.txt"};
