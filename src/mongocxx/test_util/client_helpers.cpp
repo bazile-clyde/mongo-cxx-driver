@@ -389,11 +389,6 @@ std::string tolowercase(stdx::string_view view) {
 }
 
 void check_outcome_collection(mongocxx::collection* coll, bsoncxx::document::view expected) {
-    read_concern rc;
-    rc.acknowledge_level(read_concern::level::k_local);
-    auto old_rc = coll->read_concern();
-    coll->read_concern(rc);
-
     options::find options{};
     options.sort(make_document(kvp("_id", 1)));
 
@@ -408,7 +403,6 @@ void check_outcome_collection(mongocxx::collection* coll, bsoncxx::document::vie
                       return true;
                   }));
     REQUIRE(begin(actual) == end(actual));
-    coll->read_concern(old_rc);
 }
 
 bool server_has_sessions(const client& conn) {
