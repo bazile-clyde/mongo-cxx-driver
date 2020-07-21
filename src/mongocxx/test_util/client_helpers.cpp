@@ -380,11 +380,9 @@ bool matches(document::view doc, document::view pattern, match_visitor visitor_f
 }
 
 std::string tolowercase(stdx::string_view view) {
-    std::string out;
-    out.reserve(view.size());
-    for (size_t i = 0; i < view.length(); i++) {
-        out += static_cast<char>(::tolower(view[i]));
-    }
+    using namespace std;
+    std::string out{};
+    transform(begin(view), end(view), back_inserter(out), [](char c) { return tolower(c); });
     return out;
 }
 
