@@ -16,7 +16,6 @@
 #include <iostream>
 
 #include <bsoncxx/builder/basic/document.hpp>
-#include <bsoncxx/json.hpp>
 #include <mongocxx/test/spec/monitoring.hh>
 #include <mongocxx/test_util/client_helpers.hh>
 #include <third_party/catch/include/catch.hpp>
@@ -33,33 +32,31 @@ using bsoncxx::to_json;
 void apm_checker::compare(bsoncxx::array::view expectations,
                           bool allow_extra,
                           const test_util::match_visitor& match_visitor) {
-    auto is_kill_cursor = [](bsoncxx::document::value v) {
-        return v.view()["command_started_event"]["command"]["killCursors"];
+    auto not_kill_cursor = [&](const bsoncxx::document::value& v) {
+        return _skip_kill_cursors || !(v.view()["command_started_event"]["command"]["killCursors"]);
     };
 
-    auto events_iter = _events.begin();
-    if (_skip_kill_cursors)
-        _events.erase(std::remove_if(_events.begin(), _events.end(), is_kill_cursor));
-    for (auto expectation : expectations) {
-        REQUIRE(events_iter != _events.end());
+    auto matches = [&](bsoncxx::array::element a, bsoncxx::document::view b) {
+        REQUIRE_BSON_MATCHES_V(b, a.get_document().view(), match_visitor);
+        return true;
+    };
 
-        auto expected = expectation.get_document().view();
-        CAPTURE(to_json(*events_iter), expectation);
-        REQUIRE_BSON_MATCHES_V(*events_iter, expected, match_visitor);
-        events_iter++;
-    }
-
-    REQUIRE((allow_extra || events_iter == _events.end()));
+    using namespace std;
+    auto events_end = stable_partition(begin(_events), end(_events), not_kill_cursor);
+    if (!allow_extra)
+        REQUIRE(distance(begin(expectations), end(expectations)) ==
+                distance(begin(_events), events_end));
+    REQUIRE(equal(begin(expectations), end(expectations), begin(_events), matches));
 }
 
 void apm_checker::has(bsoncxx::array::view expectations) {
-    for (auto expectation : expectations) {
-        auto expected = expectation.get_document().view();
-        CAPTURE(to_json(expected).c_str());
-        REQUIRE(std::find_if(_events.begin(), _events.end(), [&](bsoncxx::document::view doc) {
-                    return test_util::matches(doc, expected);
-                }) != _events.end());
-    }
+    using namespace std;
+    REQUIRE(all_of(begin(expectations), end(expectations), [&](bsoncxx::array::element a) {
+        auto matches = [&](bsoncxx::document::view b) {
+            return test_util::matches(a.get_document().view(), b);
+        };
+        return find_if(begin(_events), end(_events), matches) != end(_events);
+    }));
 }
 
 void apm_checker::print_all() {

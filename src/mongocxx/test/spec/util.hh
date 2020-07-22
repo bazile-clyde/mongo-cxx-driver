@@ -20,6 +20,7 @@
 #include <bsoncxx/document/view.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/test/spec/operation.hh>
+#include <mongocxx/test_util/client_helpers.hh>
 
 #include <mongocxx/config/private/prelude.hh>
 
