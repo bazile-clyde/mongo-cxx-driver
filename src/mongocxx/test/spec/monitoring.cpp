@@ -29,6 +29,17 @@ namespace spec {
 using namespace mongocxx;
 using bsoncxx::to_json;
 
+struct Matches {
+    Matches(const test_util::match_visitor& visitor) : _visitor{visitor} {}
+    bool operator()(bsoncxx::array::element a, bsoncxx::document::view b) const {
+        REQUIRE_BSON_MATCHES_V(b, a.get_document().view(), _visitor);
+        return true;
+    };
+
+   private:
+    const test_util::match_visitor _visitor;
+};
+
 void apm_checker::compare(bsoncxx::array::view expectations,
                           bool allow_extra,
                           const test_util::match_visitor& match_visitor) {
@@ -36,25 +47,18 @@ void apm_checker::compare(bsoncxx::array::view expectations,
         return _skip_kill_cursors || !(v.view()["command_started_event"]["command"]["killCursors"]);
     };
 
-    auto matches = [&](bsoncxx::array::element a, bsoncxx::document::view b) {
-        REQUIRE_BSON_MATCHES_V(b, a.get_document().view(), match_visitor);
-        return true;
-    };
-
     using namespace std;
     auto events_end = stable_partition(begin(_events), end(_events), not_kill_cursor);
     if (!allow_extra)
         REQUIRE(distance(begin(expectations), end(expectations)) ==
                 distance(begin(_events), events_end));
-    REQUIRE(equal(begin(expectations), end(expectations), begin(_events), matches));
+    REQUIRE(equal(begin(expectations), end(expectations), begin(_events), Matches{match_visitor}));
 }
 
 void apm_checker::has(bsoncxx::array::view expectations) {
     using namespace std;
     REQUIRE(all_of(begin(expectations), end(expectations), [&](bsoncxx::array::element a) {
-        auto matches = [&](bsoncxx::document::view b) {
-            return test_util::matches(a.get_document().view(), b);
-        };
+        auto matches = [&](bsoncxx::document::view b) { return Matches{{}}(a, b); };
         return find_if(begin(_events), end(_events), matches) != end(_events);
     }));
 }
