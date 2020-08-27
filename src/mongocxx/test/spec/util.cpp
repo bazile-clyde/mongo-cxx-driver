@@ -101,6 +101,7 @@ uint32_t error_code_from_name(string_view name) {
 
 /* Called with the entire test file and individual tests. */
 bool should_skip_spec_test(const client& client, document::view test) {
+
     std::set<std::string> unsupported_tests = {
         "CreateIndex and dropIndex omits default write concern",
         "MapReduce omits default write concern"};
