@@ -189,6 +189,18 @@ functions:
                   set -o pipefail
                   python etc/clang_format.py lint
 
+    "static analysis with CLion":
+      - command: shell.exec
+        params:
+          shell: bash
+          working_dir: "mongo-cxx-driver"
+          script: |
+            set -o errexit
+            set -o xtrace
+            set -o pipefail
+            cd ..
+            etc/clion_static_analysis.sh
+
     "compile":
         - command: shell.exec
           params:
