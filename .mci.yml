@@ -475,6 +475,12 @@ tasks:
         - func: "setup"
         - func: "lint"
 
+    - name: static_analysis
+      commands:
+        - func: "setup"
+        - func: "lint"
+        - func: "static analysis with CLion"
+
     - name: compile_and_test_with_shared_libs
       commands:
         - func: "setup"
@@ -706,7 +712,7 @@ buildvariants:
       run_on:
           - ubuntu1604-build
       tasks:
-          - name: lint
+          - name: static_analysis
           - name: compile_and_test_with_shared_libs
           - name: compile_and_test_with_static_libs
           - name: compile_and_test_with_shared_libs_replica_set
