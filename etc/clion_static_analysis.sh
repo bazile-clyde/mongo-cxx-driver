@@ -18,4 +18,4 @@ cat <<EOF > default.xml
 EOF
 
 CLION=$(find /snap/clion -name "clion.sh")
-$CLION inspect ~/mongo-cxx-driver ~/default.xml ~/results -v2 -d ~/mongo-cxx-driver/src
+$CLION inspect . default.xml results -v2 -d src

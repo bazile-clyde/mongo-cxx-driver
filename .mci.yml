@@ -198,7 +198,6 @@ functions:
             set -o errexit
             set -o xtrace
             set -o pipefail
-            cd ..
             etc/clion_static_analysis.sh
 
     "compile":
