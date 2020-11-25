@@ -284,6 +284,10 @@ functions:
                   fi
                   export CMAKE=${cmake}
 
+                  if [ ! `python -c "import virtualenv"` ]; then
+                      sudo pip install virtualenv
+                  fi
+
                   python -m virtualenv venv
                   cd venv
                   if [ -f bin/activate ]; then
