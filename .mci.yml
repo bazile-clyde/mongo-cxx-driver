@@ -285,7 +285,7 @@ functions:
                   export CMAKE=${cmake}
 
                   if [ ! `python -c "import virtualenv"` ]; then
-                      ./bin/pip install virtualenv
+                      pip install virtualenv
                   fi
 
                   python -m virtualenv venv
