@@ -162,10 +162,10 @@ add_executable(test_mongohouse_specs
 )
 
 add_executable(test_unified_format_spec
-        ${PROJECT_SOURCE_DIR}/test_util/client_helpers.cpp
-        ${THIRD_PARTY_SOURCE_DIR}/catch/main.cpp
-        spec/unified_test_format.cpp
-        ${spec_test_common}
+    ${PROJECT_SOURCE_DIR}/test_util/client_helpers.cpp
+    ${THIRD_PARTY_SOURCE_DIR}/catch/main.cpp
+    spec/unified_test_format.cpp
+    ${spec_test_common}
 )
 
 target_link_libraries(test_driver mongocxx_mocked ${libmongoc_target})

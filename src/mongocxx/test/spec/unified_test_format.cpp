@@ -14,3 +14,9 @@
 
 #include <bsoncxx/test_util/catch.hh>
 #include <mongocxx/test/spec/test_runner.hh>
+
+namespace {
+TEST_CASE("unified format spec automated tests", "[unified_format_spec]") {
+    (void)1;
+}
+}
