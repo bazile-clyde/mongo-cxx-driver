@@ -79,7 +79,8 @@ set(test_driver_sources
 set(spec_test_common
     spec/operation.cpp
     spec/monitoring.cpp
-    spec/util.cpp)
+    spec/util.cpp
+    spec/test_runner.cpp)
 
 add_executable(test_driver
     ${PROJECT_SOURCE_DIR}/test_util/client_helpers.cpp
@@ -311,6 +312,8 @@ set_dist_list (src_mongocxx_test_DIST
    spec/monitoring.hh
    spec/operation.cpp
    spec/operation.hh
+   spec/test_runner.cpp
+   spec/test_runner.hh
    spec/read_write_concern.cpp
    spec/retryable-reads.cpp
    spec/transactions.cpp
