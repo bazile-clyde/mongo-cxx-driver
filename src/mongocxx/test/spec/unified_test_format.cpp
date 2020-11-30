@@ -14,9 +14,18 @@
 
 #include <bsoncxx/test_util/catch.hh>
 #include <mongocxx/test/spec/test_runner.hh>
+#include <mongocxx/test/spec/util.hh>
 
 namespace {
+
+using namespace mongocxx;
+using namespace spec;
+
+void _run_unified_format_tests_in_file(std::string test_path) {
+    std::cout << "TEST PATH: " << test_path << std::endl;
+}
+
 TEST_CASE("unified format spec automated tests", "[unified_format_spec]") {
-    (void)1;
+    run_tests_in_suite("UNIFIED_FORMAT_TESTS_PATH", _run_unified_format_tests_in_file);
 }
 }
