@@ -14,6 +14,7 @@
 
 #include <bsoncxx/stdx/optional.hpp>
 #include <bsoncxx/test_util/catch.hh>
+#include <bsoncxx/types/bson_value/value.hpp>
 #include <fstream>
 #include <mongocxx/instance.hpp>
 #include <mongocxx/test/spec/test_runner.hh>
@@ -31,6 +32,7 @@ constexpr int runner_version[3] = {1, 0, 0};
 
 void _run_unified_format_tests_in_file(std::string test_path) {
     using bsoncxx::v_noabi::stdx::optional;
+    using bsoncxx::types::bson_value::value;
 
     // parse test file #############################################################################
     optional<document::value> test_spec = test_util::parse_test_file(test_path);
@@ -39,6 +41,8 @@ void _run_unified_format_tests_in_file(std::string test_path) {
 
     // schemaVersion. required #####################################################################
     const std::string sv = test_spec_view["schemaVersion"].get_string().value.to_string();
+    REQUIRE(sv.size());
+
     std::vector<int> schema_version;
 
     const std::regex period("\\.");
@@ -52,6 +56,21 @@ void _run_unified_format_tests_in_file(std::string test_path) {
                       schema_version[v::k_minor] <= runner_version[v::k_minor];
     if (!compatible)
         return;
+
+    // runOnRequirements. optional #################################################################
+    if (test_spec_view["runOnRequirements"]) {
+        array::view run_on = test_spec_view["runOnRequirements"].get_array().value;
+        for (auto requirement : run_on) {
+            std::cout << "WE HAVE RUN ON REQS!" << std::endl;
+            std::cout << bsoncxx::to_json(requirement.get_document()) << std::endl;
+            if (auto min_ser_ver = requirement["minServerVersion"])
+                std::cout << min_ser_ver.get_string().value << std::endl;
+            if (auto max_ser_ver = requirement["maxServerVersion"])
+                std::cout << max_ser_ver.get_string().value << std::endl;
+            if (auto topo = requirement["topologies"])
+                std::cout << bsoncxx::to_json(topo.get_array().value) << std::endl;
+        }
+    }
 
     // description. required #######################################################################
     std::string description = test_spec_view["description"].get_string().value.to_string();
