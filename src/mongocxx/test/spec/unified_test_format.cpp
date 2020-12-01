@@ -41,8 +41,9 @@ void _run_unified_format_tests_in_file(std::string test_path) {
     const std::string schema = test_spec_view["schemaVersion"].get_string().value.to_string();
 
     std::regex period("\\.");
+    constexpr int submatch = -1;
     std::vector<std::string> version_string = {
-        std::sregex_token_iterator(begin(schema), end(schema), period, -1),
+        std::sregex_token_iterator(begin(schema), end(schema), period, submatch),
         std::sregex_token_iterator()};
 
     std::vector<int> test_version;
