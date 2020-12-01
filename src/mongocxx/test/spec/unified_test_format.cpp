@@ -38,23 +38,18 @@ void _run_unified_format_tests_in_file(std::string test_path) {
     auto test_spec_view = test_spec->view();
 
     // schemaVersion. required #####################################################################
-    const std::string schema = test_spec_view["schemaVersion"].get_string().value.to_string();
+    const std::string sv = test_spec_view["schemaVersion"].get_string().value.to_string();
+    std::vector<int> schema_version;
 
-    std::regex period("\\.");
-    constexpr int submatch = -1;
-    std::vector<std::string> version_string = {
-        std::sregex_token_iterator(begin(schema), end(schema), period, submatch),
-        std::sregex_token_iterator()};
-
-    std::vector<int> test_version;
-    std::transform(begin(version_string),
-                   end(version_string),
-                   std::back_inserter(test_version),
+    const std::regex period("\\.");
+    std::transform(std::sregex_token_iterator(begin(sv), end(sv), period, -1),
+                   std::sregex_token_iterator(),
+                   std::back_inserter(schema_version),
                    [](const std::string s) { return std::stoi(s); });
 
     enum v { k_major, k_minor, k_patch };
-    bool compatible = test_version[v::k_major] == runner_version[v::k_major] &&
-                      test_version[v::k_minor] <= runner_version[v::k_minor];
+    bool compatible = schema_version[v::k_major] == runner_version[v::k_major] &&
+                      schema_version[v::k_minor] <= runner_version[v::k_minor];
     if (!compatible)
         return;
 
