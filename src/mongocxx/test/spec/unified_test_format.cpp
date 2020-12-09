@@ -48,17 +48,18 @@ std::vector<int> parse_version(document::element doc) {
 template <typename Compare>
 bool compare_to_server_version(const std::vector<int>& version, Compare cmp) {
     static std::vector<int> server_version = parse_version(test_util::get_server_version());
-    return std::lexicographical_compare(std::begin(server_version),
-                                        std::next(std::begin(server_version), v::k_patch),
-                                        std::begin(version),
+    return std::lexicographical_compare(std::begin(version),
                                         std::next(std::begin(version), v::k_patch),
+                                        std::begin(server_version),
+                                        std::next(std::begin(server_version), v::k_patch),
                                         cmp);
 }
 
 bool compare_to_server_topology(array::view topologies) {
     static std::string server_topology = test_util::get_topology();
-    auto equals = [&](const array::element& a) {
-        auto topology = a.get_string().value.to_string();
+
+    auto equals = [&](const array::element& element) {
+        auto topology = element.get_string().value.to_string();
         return topology == server_topology ||
                (topology == "sharded-replicaset" && server_topology == "shared");
     };
@@ -67,14 +68,14 @@ bool compare_to_server_topology(array::view topologies) {
            std::find_if(std::begin(topologies), std::end(topologies), equals);
 }
 
-bool run_on_requirement(const array::element& requirement) {
+bool compatible_with_server(const array::element& requirement) {
     if (auto min_server_version = requirement["minServerVersion"])
-        if (!compare_to_server_version(parse_version(min_server_version),
-                                       std::greater_equal<int>{}))
+        if (!compare_to_server_version(parse_version(min_server_version), std::less_equal<int>{}))
             return false;
 
     if (auto max_server_version = requirement["maxServerVersion"])
-        if (!compare_to_server_version(parse_version(max_server_version), std::less_equal<int>{}))
+        if (!compare_to_server_version(parse_version(max_server_version),
+                                       std::greater_equal<int>{}))
             return false;
 
     if (auto topologies = requirement["topologies"])
@@ -84,10 +85,10 @@ bool run_on_requirement(const array::element& requirement) {
 
 bool run_on_requirements(const document::view test) {
     if (!test["runOnRequirements"])
-        return true;
+        return true; /* optional */
 
     auto requirements = test["runOnRequirements"].get_array().value;
-    return std::all_of(std::begin(requirements), std::end(requirements), run_on_requirement);
+    return std::any_of(std::begin(requirements), std::end(requirements), compatible_with_server);
 }
 
 void _run_unified_format_tests_in_file(std::string test_path) {
@@ -100,9 +101,9 @@ void _run_unified_format_tests_in_file(std::string test_path) {
     auto test_spec_view = test_spec->view();
 
     // schemaVersion. required #####################################################################
-    const std::string sv = test_spec_view["schemaVersion"].get_string().value.to_string();
-    REQUIRE(sv.size());
-    std::vector<int> schema_version = parse_version(sv);
+    REQUIRE(test_spec_view["schemaVersion"]);
+    std::vector<int> schema_version =
+        parse_version(test_spec_view["schemaVersion"].get_string().value.to_string());
 
     bool compatible = schema_version[v::k_major] == runner_version[v::k_major] &&
                       schema_version[v::k_minor] <= runner_version[v::k_minor];
