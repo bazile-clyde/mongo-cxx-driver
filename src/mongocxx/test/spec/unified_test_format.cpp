@@ -29,6 +29,66 @@ using namespace mongocxx;
 using namespace spec;
 
 constexpr int runner_version[3] = {1, 0, 0};
+enum v { k_major, k_minor, k_patch };
+
+std::vector<int> parse_version(const std::string& input) {
+    std::vector<int> output;
+    const std::regex period("\\.");
+    std::transform(std::sregex_token_iterator(std::begin(input), std::end(input), period, -1),
+                   std::sregex_token_iterator(),
+                   std::back_inserter(output),
+                   [](const std::string s) { return std::stoi(s); });
+    return output;
+}
+
+std::vector<int> parse_version(document::element doc) {
+    return parse_version(doc.get_string().value.to_string());
+}
+
+template <typename Compare>
+bool compare_to_server_version(const std::vector<int>& version, Compare cmp) {
+    static std::vector<int> server_version = parse_version(test_util::get_server_version());
+    return std::lexicographical_compare(std::begin(server_version),
+                                        std::next(std::begin(server_version), v::k_patch),
+                                        std::begin(version),
+                                        std::next(std::begin(version), v::k_patch),
+                                        cmp);
+}
+
+bool compare_to_server_topology(array::view topologies) {
+    static std::string server_topology = test_util::get_topology();
+    auto equals = [&](const array::element& a) {
+        auto topology = a.get_string().value.to_string();
+        return topology == server_topology ||
+               (topology == "sharded-replicaset" && server_topology == "shared");
+    };
+
+    return std::end(topologies) !=
+           std::find_if(std::begin(topologies), std::end(topologies), equals);
+}
+
+bool run_on_requirement(const array::element& requirement) {
+    if (auto min_server_version = requirement["minServerVersion"])
+        if (!compare_to_server_version(parse_version(min_server_version),
+                                       std::greater_equal<int>{}))
+            return false;
+
+    if (auto max_server_version = requirement["maxServerVersion"])
+        if (!compare_to_server_version(parse_version(max_server_version), std::less_equal<int>{}))
+            return false;
+
+    if (auto topologies = requirement["topologies"])
+        return compare_to_server_topology(topologies.get_array().value);
+    return true;
+}
+
+bool run_on_requirements(const document::view test) {
+    if (!test["runOnRequirements"])
+        return true;
+
+    auto requirements = test["runOnRequirements"].get_array().value;
+    return std::all_of(std::begin(requirements), std::end(requirements), run_on_requirement);
+}
 
 void _run_unified_format_tests_in_file(std::string test_path) {
     using bsoncxx::types::bson_value::value;
@@ -42,35 +102,16 @@ void _run_unified_format_tests_in_file(std::string test_path) {
     // schemaVersion. required #####################################################################
     const std::string sv = test_spec_view["schemaVersion"].get_string().value.to_string();
     REQUIRE(sv.size());
+    std::vector<int> schema_version = parse_version(sv);
 
-    std::vector<int> schema_version;
-
-    const std::regex period("\\.");
-    std::transform(std::sregex_token_iterator(begin(sv), end(sv), period, -1),
-                   std::sregex_token_iterator(),
-                   std::back_inserter(schema_version),
-                   [](const std::string s) { return std::stoi(s); });
-
-    enum v { k_major, k_minor, k_patch };
     bool compatible = schema_version[v::k_major] == runner_version[v::k_major] &&
                       schema_version[v::k_minor] <= runner_version[v::k_minor];
     if (!compatible)
         return;
 
     // runOnRequirements. optional #################################################################
-    if (test_spec_view["runOnRequirements"]) {
-        array::view run_on = test_spec_view["runOnRequirements"].get_array().value;
-        for (auto requirement : run_on) {
-            std::cout << "WE HAVE RUN ON REQS!" << std::endl;
-            std::cout << bsoncxx::to_json(requirement.get_document()) << std::endl;
-            if (auto min_ser_ver = requirement["minServerVersion"])
-                std::cout << min_ser_ver.get_string().value << std::endl;
-            if (auto max_ser_ver = requirement["maxServerVersion"])
-                std::cout << max_ser_ver.get_string().value << std::endl;
-            if (auto topo = requirement["topologies"])
-                std::cout << bsoncxx::to_json(topo.get_array().value) << std::endl;
-        }
-    }
+    if (!run_on_requirements(test_spec_view))
+        return;
 
     // description. required #######################################################################
     std::string description = test_spec_view["description"].get_string().value.to_string();
