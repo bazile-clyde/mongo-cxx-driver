@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <fstream>
+#include <regex>
+
 #include <bsoncxx/stdx/optional.hpp>
 #include <bsoncxx/test_util/catch.hh>
 #include <bsoncxx/types/bson_value/value.hpp>
-#include <fstream>
 #include <mongocxx/instance.hpp>
 #include <mongocxx/test/spec/test_runner.hh>
 #include <mongocxx/test/spec/util.hh>
 #include <mongocxx/test_util/client_helpers.hh>
-#include <mongocxx/test_util/client_helpers.hh>
-#include <regex>
 
 namespace {
 
@@ -31,8 +31,8 @@ using namespace spec;
 constexpr int runner_version[3] = {1, 0, 0};
 
 void _run_unified_format_tests_in_file(std::string test_path) {
-    using bsoncxx::v_noabi::stdx::optional;
     using bsoncxx::types::bson_value::value;
+    using bsoncxx::v_noabi::stdx::optional;
 
     // parse test file #############################################################################
     optional<document::value> test_spec = test_util::parse_test_file(test_path);
@@ -91,4 +91,4 @@ TEST_CASE("unified format spec automated tests", "[unified_format_spec]") {
         _run_unified_format_tests_in_file(path + "/" + test_file);
     }
 }
-}
+}  // namespace

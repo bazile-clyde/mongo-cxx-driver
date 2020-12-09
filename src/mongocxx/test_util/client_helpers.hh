@@ -76,7 +76,7 @@ std::int32_t get_max_wire_version(const client& client);
 ///
 /// Determines the server version number by running "serverStatus".
 ///
-std::string get_server_version(const client& client);
+std::string get_server_version(const client& client = {});
 
 ///
 /// Get replica set name, or empty string.
