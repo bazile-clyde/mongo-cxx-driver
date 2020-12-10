@@ -56,12 +56,12 @@ bool compare_to_server_version(const std::vector<int>& version, Compare cmp) {
 }
 
 bool compare_to_server_topology(array::view topologies) {
+    using bsoncxx::types::bson_value::value;
     static std::string server_topology = test_util::get_topology();
 
-    auto equals = [&](const array::element& element) {
-        auto topology = element.get_string().value.to_string();
-        return topology == server_topology ||
-               (topology == "sharded-replicaset" && server_topology == "shared");
+    auto equals = [&](const array::element& topology) {
+        return topology == value(server_topology) ||
+               (topology == value("sharded-replicaset") && server_topology == "shared");
     };
 
     return std::end(topologies) !=
