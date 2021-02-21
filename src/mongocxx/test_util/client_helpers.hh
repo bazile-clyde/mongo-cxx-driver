@@ -100,6 +100,13 @@ std::string get_topology(const client& client);
 ///
 stdx::optional<bsoncxx::document::value> parse_test_file(std::string path);
 
+///
+/// Parses a BSON file at a given path and return it as a BSON document value.
+///
+/// Returns none if the path is not found.
+///
+stdx::optional<bsoncxx::document::value> parse_bson_test_file(std::string path);
+
 //
 // Determines whether or not the given client supports the collation feature, by running the
 // "isMaster" command.

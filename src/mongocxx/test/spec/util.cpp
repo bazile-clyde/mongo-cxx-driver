@@ -782,7 +782,7 @@ void run_crud_tests_in_file(const std::string& test_path, uri test_uri) {
     using bsoncxx::string::to_string;
 
     INFO("Test path: " << test_path);
-    optional<document::value> test_spec = test_util::parse_test_file(test_path);
+    optional<document::value> test_spec = test_util::parse_bson_test_file(test_path);
     REQUIRE(test_spec);
 
     options::client client_opts;

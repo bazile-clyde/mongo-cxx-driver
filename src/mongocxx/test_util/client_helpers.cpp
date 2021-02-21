@@ -27,6 +27,7 @@
 #include <bsoncxx/document/value.hpp>
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/json.hpp>
+#include <bsoncxx/stdx/make_unique.hpp>
 #include <bsoncxx/stdx/optional.hpp>
 #include <bsoncxx/stdx/string_view.hpp>
 #include <bsoncxx/string/to_string.hpp>
@@ -237,6 +238,27 @@ std::string get_topology(const client& client) {
     } else {
         return "single";
     }
+}
+
+stdx::optional<bsoncxx::document::value> parse_bson_test_file(std::string path) {
+    std::ifstream is{path};
+    if (is.bad()) {
+        return {};
+    }
+
+    is.seekg(0, is.end);
+    auto len = is.tellg();
+    is.seekg(0, is.beg);
+
+    using deleter_type = void (*)(std::uint8_t*);
+
+    uint8_t* buffer = new uint8_t[len];
+    is.read((char*)buffer, len);
+    is.close();
+
+    deleter_type d = [](std::uint8_t* ptr) { delete[] ptr; };
+    auto doc = document::value{buffer, static_cast<size_t>(len), d};
+    return doc;
 }
 
 stdx::optional<bsoncxx::document::value> parse_test_file(std::string path) {
