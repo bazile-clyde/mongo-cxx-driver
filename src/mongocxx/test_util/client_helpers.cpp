@@ -250,14 +250,11 @@ stdx::optional<bsoncxx::document::value> parse_bson_test_file(std::string path) 
     auto len = is.tellg();
     is.seekg(0, is.beg);
 
-    using deleter_type = void (*)(std::uint8_t*);
-
-    uint8_t* buffer = new uint8_t[len];
-    is.read((char*)buffer, len);
+    auto buffer = std::vector<uint8_t>(static_cast<size_t>(len));
+    is.read(reinterpret_cast<char*>(buffer.data()), len);
     is.close();
 
-    deleter_type d = [](std::uint8_t* ptr) { delete[] ptr; };
-    auto doc = document::value{buffer, static_cast<size_t>(len), d};
+    auto doc = document::value{document::view{buffer.data(), buffer.size()}};
     return doc;
 }
 
